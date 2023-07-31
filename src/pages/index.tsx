@@ -1,118 +1,226 @@
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
 
-const inter = Inter({ subsets: ['latin'] })
+import Layout from '@/components/layout'
+import CardItem from '@/components/CardItem'
+import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import BoardData from "../data/board-data.json";
+import { useEffect, useState } from "react";
+import { v4 as uuidv4 } from 'uuid';
 
 export default function Home() {
+  const [ready, setReady] = useState(false);
+  const [show, setShow] = useState(null);
+  const [boardData, setBoardData] = useState(BoardData);
+  // const [showForm, setShowForm] = useState(false);
+  // const [selectedBoard, setSelectedBoard] = useState(0);
+  //  const [fail, setFail] = useState(0);
+let newBoardData;
+  useEffect(() => {
+    if (process) {
+      setReady(true);
+    }
+  }, []);
+  const makeTrue=(re:any)=>{
+    setShow(re.source);
+ 
+      console.log("show is ",show)
+  
+
+  }
+
+  const onDragEnd = (re: any) => {
+    if (!re.destination) return;
+     newBoardData = boardData;
+
+       var dragItem =newBoardData[parseInt(re.source.droppableId)].items[re.source.index];
+       // to enable each colum to take one value
+        const m=newBoardData[parseInt(re.destination.droppableId)].items.length+1
+        const n=newBoardData[parseInt(re.destination.droppableId)].name
+        if(m >1 ){
+          if(n==="Answers"){
+            newBoardData[parseInt(re.destination.droppableId)].items.push(
+              //re.destination.index,
+              dragItem
+           );
+           newBoardData[parseInt(re.source.droppableId)].items.splice(
+             re.source.index,
+             1
+           );
+           
+          console.log("n =>",n)
+          }
+          // newBoardData[parseInt(re.source.droppableId)].items.splice(
+          //   re.source.index,
+          //   1
+          // );
+          // newBoardData[parseInt(re.destination.droppableId)].items.splice(
+          //   re.destination.index,
+          //   0,
+          //   dragItem
+          // );
+
+          return;
+        }
+        else{
+          // if(n=='Answers'){console.log("Answers")}
+                //عشان امسح اللى بسحبه من الاجابات المتاحة
+      newBoardData[parseInt(re.source.droppableId)].items.splice(
+        re.source.index,
+        1
+      );
+      newBoardData[parseInt(re.destination.droppableId)].items.splice(
+        re.destination.index,
+        0,
+        dragItem
+      );
+        }
+     
+      // console.log("m",m,re.destination.droppableId)
+   
+
+      setBoardData(newBoardData);
+
+
+  };
+
+  var changeClassName = 'bg-sky-100';
   return (
-    <main
-      className={`flex min-h-screen flex-col items-center justify-between p-24 ${inter.className}`}
-    >
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/pages/index.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
+    <Layout>
+      <div className="p-10 flex flex-col h-screen">
+        {/* Board columns */}
+        {ready && (
+          <DragDropContext onDragEnd={onDragEnd}>
+            <div className="grid grid-cols-4 gap-5 my-5">
+
+              {boardData.map((board, bIndex) => {
+                // var hasOneOrZeroCards = true;
+                // if (board.items.length > 1) {
+                //   hasOneOrZeroCards = true;
+                // }
+
+                if (bIndex == 0) {
+                  return (
+                    <div key={board.name} className='flex  row-span-5'>
+                      <Droppable droppableId={bIndex.toString()} key={board.name} >
+                        {(provided, snapshot) => (
+                          <div
+                            {...provided.droppableProps}
+                            ref={provided.innerRef}
+                          >
+                            <div
+                              className={`bg-gray-100 rounded-md shadow-md
+                              flex flex-col relative overflow-hidden
+                              ${snapshot.isDraggingOver && "bg-green-100"}`}
+                            >
+                              {/* style for line at the top of div */}
+                              <span
+                                className="w-full h-1 bg-gradient-to-r from-pink-700 to-red-200
+                            absolute inset-x-0 top-0"></span>
+                              {/* header for each div or block */}
+                              <h4 className=" p-3 flex justify-between items-center mb-2">
+                                <span className="text-2xl text-gray-600">
+                                  {board.name}
+                                </span>
+                              </h4>
+
+                              <div className="overflow-y-auto overflow-x-hidden h-auto"
+                                style={{ maxHeight: 'calc(100vh - 290px)' }}>
+                                {board.items.length > 0 &&
+                                  board.items.map((item, iIndex) => {
+                                    return (
+                                      <CardItem
+                                        key={item.id}
+                                        data={item}
+                                        index={iIndex}
+                                        className="m-3"
+                                      />
+                                    );
+                                  })}
+                                {provided.placeholder}
+                              </div>
+
+                            </div>
+                          </div>
+                        )}
+                      </Droppable>
+                    </div>
+                  );
+                }
+
+                // to display other columns ---------------------
+                return (
+                  <Droppable droppableId={bIndex.toString()} key={board.name}>
+                    {(provided, snapshot) => (
+                      <div
+                        {...provided.droppableProps}
+                        ref={provided.innerRef}
+                      >
+                        <div
+                          className={`${changeClassName} rounded-md shadow-md
+                                    flex flex-col relative overflow-hidden
+                                    ${snapshot.isDraggingOver && "bg-green-100"} `
+                          }
+                        >
+
+                          <span
+                            className="w-full h-1 bg-gradient-to-r from-pink-700 to-red-200
+                                absolute inset-x-0 top-0"></span>
+                          {/* header for each div or block */}
+                          <h4 className=" p-3 flex justify-between items-center mb-2">
+                            <span className="text-2xl text-gray-600">
+                              {board.name}
+                            </span>
+                          </h4>
+                          {board.items.length == 1 && (
+                            <div className="overflow-y-auto overflow-x-hidden h-auto"
+                              style={{ maxHeight: 'calc(100vh - 290px)' }}>
+                              {
+                                board.items.map((item, iIndex) => {
+                                  return (
+                                    <div key={uuidv4()} className="m-3">
+                                      <CardItem
+                                        key={item.id}
+                                        data={item}
+                                        index={iIndex}
+                                        className={`m-3`}
+                                      />
+                                      {item.id === bIndex ? (
+                                        <>
+                                          <div className='text-green-700'>
+                                            <p>Success</p>
+                                          </div>
+                                          {/* changeClassName='bg-green-200' */}
+                                        </>
+
+                                      ) :
+                                        (<div className='text-red-700'>
+                                          <p>fail</p>
+                                        </div>)}
+                                    </div>
+                                  );
+
+                                })
+                              }
+                              {provided.placeholder}
+                            </div>
+                          )}
+
+
+                        </div>
+                      </div>
+                    )}
+                    
+                  </Droppable>
+                );
+                // to display other columns ---------------------
+
+
+
+
+              })}
+            </div>
+          </DragDropContext>
+        )}
       </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700/10 after:dark:from-sky-900 after:dark:via-[#0141ff]/40 before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Discover and deploy boilerplate example Next.js&nbsp;projects.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+    </Layout>
+  );
 }
